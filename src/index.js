@@ -1,45 +1,67 @@
 import './css/styles.css';
+import { debounce } from 'lodash';
 import Notiflix from 'notiflix';
 import { fetchCountries } from './fetchCountries';
-const inputEL = document.querySelector('[id="search-box"]');
+
+const inputEL = document.querySelector('#search-box');
 const listEl = document.querySelector('.country-list');
 const countryInfoEl = document.querySelector('.country-info');
 const DEBOUNCE_DELAY = 300;
 
-const url = `https://restcountries.com/v3.1/name/`;
-
-inputEL.addEventListener('input', debounce(fetchCountries, DEBOUNCE_DELAY));
-
 const onSearchCountry = eve => {
-  const nameCountry = eve.terget.value.trim().toLowerCase();
+  cleanMarkup();
+  const nameCountry = eve.target.value.trim().toLowerCase();
 
   if (nameCountry === '') {
+    cleanMarkup();
     return;
   }
-    fetchCountries(nameCountry)=>
+  fetchCountries(nameCountry)
+    .then(countries => {
+      insertMarkup(countries);
+    })
+    .catch(error => {
+      if (error === 'Error 404') {
+        Notiflix.Notify.failure('Oops, there is no country with that name');
+      }
+    });
 };
-// const handleSubmit = e => {
-//   e.preventDefault();
-//   const category = categoryEl.value;
-//   const pageSize = pageSizeEl.value;
-//   const url = `${BASE_URL}/top-headlines?apiKey=${KEY}&category=${category}&country=ua&pageSize=${pageSize}&page=${currentPage}`;
 
-//   fetch(url)
-//     .then(response => response.json())
-//     .then(data => {
-//       if (e.type === 'submit') {
-//         updateUi(data, pageSize);
-//       }
-//       isertContent(data.articles);
-//       if (currentPage > Math.ceil(data?.totalResults / pageSize)) {
-//         loadMoreBtn.classList.add('hide');
-//       }
-//       // console.log('data', data);
-//     })
-//     .catch(error => {
-//       console.log('error', error);
-//     })
-//     .finally(() => {
-//       currentPage += 1;
-//     });
-// };
+inputEL.addEventListener('input', debounce(onSearchCountry, DEBOUNCE_DELAY));
+
+const addMinMarkup = item => `<li> 
+    <img src="${item.flags.svg}" width="50">
+    <h2>${item.name.official}</h2>
+  </li>`;
+
+const addMaxMarkup = item => `
+<li>
+<img src="${item.flags.svg}" width=70px>
+<p> ${item.name.official}</p>
+<p>Capital: ${item.capital}</p>
+<p>Population: ${item.population}</p>
+<p>Languages: ${Object.values(item.languages)}</p>
+</li>
+`;
+
+const isertContent = array => {
+  if (array.length > 10) {
+    Notiflix.Notify.warning(
+      'Too many matches found. Please enter a more specific name.'
+    );
+  } else if (array.length >= 2 && array.length <= 10) {
+    return array.reduce((acc, item) => acc + addMinMarkup(item), '');
+  } else if (array.length === 1) {
+    return array.reduce((acc, item) => acc + addMaxMarkup(item), '');
+  }
+};
+
+function insertMarkup(array) {
+  const result = isertContent(array);
+  listEl.insertAdjacentHTML('beforeend', result);
+}
+
+function cleanMarkup() {
+  listEl.innerHTML = '';
+  countryInfoEl.innerHTML = '';
+}

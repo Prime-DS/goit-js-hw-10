@@ -1,12 +1,12 @@
-export default function fetchCountries(name) {
-  fetch(
-    `https://restcountries.com/v2/name/${name}?fields=name,capital,currency,flags,languages`
-  ).then(response => {
-    if (response === 200) {
-      return response.jeson();
+export function fetchCountries(name) {
+  const BASE_URL = 'https://restcountries.com/v3.1/';
+  return fetch(`${BASE_URL}name/${name}?`).then(response => {
+    if (response.status === 200) {
+      return response.json();
     }
-    if (response === 404) {
-      return Promise.reject('eror 404!');
+
+    if (response.status === 404) {
+      return Promise.reject('Error 404');
     }
   });
 }

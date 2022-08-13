@@ -18,3 +18,10 @@ body {
   max-width: 320px;
   margin-bottom: 16px;
 }
+
+.country-list{
+font-size: 15;
+display: flex;
+flex-direction: column;
+list-style: none;
+}
